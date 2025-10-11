@@ -161,12 +161,14 @@ function showClass(classId) {
   // Render header hanya jika belum ada
   if (!document.querySelector("#content h2")) {
     let content = `
+    <div style="position:relative">
+      <button class="toggle-menu-btn" onclick="toggleMenu()">
+        ${isMenuHidden ? '📋' : '📺'}
+      </button>
       <h2>
-        <button class="toggle-menu-btn" onclick="toggleMenu()">
-          ${isMenuHidden ? '📋' : '📺'}
-        </button>
         <span>Kelas ${classId}: ${classNames[classId]}</span>
       </h2>
+    </div>
     `;
     document.getElementById("content").innerHTML = content;
     podiumRendered = false;
@@ -175,6 +177,12 @@ function showClass(classId) {
     const titleSpan = document.querySelector("#content h2 span");
     if (titleSpan) {
       titleSpan.textContent = `Kelas ${classId}: ${classNames[classId]}`;
+    }
+    
+    // Hapus podium lama saat ganti kelas (jika flag sudah false dari button click)
+    if (!podiumRendered) {
+      const existingPodium = document.querySelector(".podium-container");
+      if (existingPodium) existingPodium.remove();
     }
   }
 

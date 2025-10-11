@@ -342,6 +342,13 @@ body {
   .header h1 {
     font-size: 1.8em;
   }
+  .toggle-menu-btn {
+    position:relative;
+    display: inline-block;
+    top:0px;
+    margin-bottom: 8px;
+  }
+
   .class-grid {
     grid-template-columns: 1fr;
   }
