@@ -179,11 +179,28 @@ function showClass(classId) {
   }
 
   if (classData.length === 0) {
+    // Hapus podium dan tabel yang ada
+    const existingPodium = document.querySelector(".podium-container");
+    const existingTable = document.getElementById("dataTableContainer");
+    if (existingPodium) existingPodium.remove();
+    if (existingTable) {
+      if (dataTable) {
+        dataTable.destroy();
+        dataTable = null;
+      }
+      existingTable.remove();
+    }
+    
     const existingMsg = document.querySelector(".no-data");
     if (!existingMsg) {
       document.getElementById("content").innerHTML += `<p class="no-data">Belum ada peserta terdaftar</p>`;
     }
+    podiumRendered = false;
     return;
+  } else {
+    // Hapus pesan "belum ada peserta" jika ada
+    const existingMsg = document.querySelector(".no-data");
+    if (existingMsg) existingMsg.remove();
   }
 
   // Render podium hanya sekali per kelas
@@ -297,6 +314,7 @@ function showClass(classId) {
             paging: true,
             info: true,
             autoWidth: false,
+            responsive: true,
             language: {
               search: "🔍 Cari:",
               lengthMenu: "Tampilkan _MENU_ data per halaman",
