@@ -1,407 +1,303 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* --- Reset & Core Variables --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-dark: #09090b; 
+  --bg-surface: #18181b; 
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-muted: #a1a1aa;
+  
+  /* Warna Metalik Mewah yang Tidak Norak (Matte/Refined) */
+  --gold: #fde047;       /* Warm Champagne Gold */
+  --gold-border: rgba(253, 224, 71, 0.3);
+  --gold-glow: rgba(253, 224, 71, 0.12);
+
+  --silver: #e2e8f0;     /* Platinum Silver */
+  --silver-border: rgba(226, 232, 240, 0.25);
+  --silver-glow: rgba(226, 232, 240, 0.08);
+
+  --bronze: #fb923c;     /* Rich Bronze / Copper */
+  --bronze-border: rgba(251, 146, 60, 0.3);
+  --bronze-glow: rgba(251, 146, 60, 0.12);
+  
+  --accent: #10b981;
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
   min-height: 100vh;
-  padding: 20px;
-  color: #333;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Header */
-.header {
-  text-align: center;
-  color: white;
-  margin-bottom: 30px;
-}
-.header h1 {
-  font-size: 2.5em;
-  margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-.header p {
-  font-size: 1.1em;
-  opacity: 0.9;
-}
-
-/* Class Selector */
-.class-selector {
-  background: white;
-  border-radius: 15px;
-  padding: 25px;
-  margin-bottom: 10px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+/* --- Operator Menu UI (Kiri Bawah) --- */
+.operator-btn {
+  position: fixed; bottom: 32px; left: 32px; z-index: 100;
+  background: rgba(24, 24, 27, 0.8);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted); padding: 14px; border-radius: 14px;
+  cursor: pointer; backdrop-filter: blur(12px);
   transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
 }
-.class-selector.hidden {
-  display: none;
+.operator-btn:hover { color: white; background: rgba(39, 39, 42, 0.9); transform: scale(1.05); }
+
+.operator-menu {
+  position: fixed; top: 0; left: -360px;
+  width: 320px; height: 100vh;
+  background: rgba(9, 9, 11, 0.95);
+  backdrop-filter: blur(24px);
+  border-right: 1px solid var(--border-subtle);
+  z-index: 200; padding: 32px 24px;
+  transition: left 0.5s var(--ease-spring);
 }
-.class-selector h3 {
-  color: #667eea;
-  margin-bottom: 15px;
-  font-size: 1.3em;
-}
-.class-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 12px;
-}
+.operator-menu.open { left: 0; }
+.menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; color: white; }
+.close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+.close-btn:hover { color: white; }
+
 .class-btn {
-  padding: 15px 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border: 2px solid transparent;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.95em;
-  transition: all 0.3s ease;
-  text-align: left;
-  position: relative;
-  overflow: hidden;
+  display: block; width: 100%; text-align: left;
+  background: transparent; color: var(--text-muted);
+  border: 1px solid transparent;
+  padding: 14px 16px; border-radius: 8px; margin-bottom: 4px;
+  font-family: inherit; font-size: 14px; font-weight: 500; 
+  cursor: pointer; transition: all 0.2s;
 }
-.class-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+.class-btn:hover { background: rgba(255,255,255,0.03); color: white; }
+.class-btn.active { background: rgba(255,255,255,0.08); color: white; border-color: var(--border-subtle); font-weight: 600; }
+
+/* --- SEQUENCER CONTROLS (Digeser agar tidak menabrak podium) --- */
+.reveal-controls {
+  position: fixed; 
+  right: 16px; /* Jarak aman tepi kanan */
+  top: 50%; 
+  transform: translateY(-50%) translateX(10px);
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: 8px;
+  background: rgba(24, 24, 27, 0.5); /* Lebih transparan */
+  padding: 10px 6px; 
+  border-radius: 24px; 
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.06);
+  z-index: 100; 
+  opacity: 0.3; /* Samar saat tidak dihover agar tidak mengganggu pandangan layar */
+  transition: all 0.4s var(--ease-spring);
+  width: 68px; 
 }
-.class-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-color: #667eea;
-  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-}
-.class-btn::before {
-  content: '🏆';
-  margin-right: 8px;
-  font-size: 1.2em;
+.reveal-controls:hover, .stage-fullscreen:hover .reveal-controls { 
+  opacity: 1; 
+  transform: translateY(-50%) translateX(0); 
+  background: rgba(24, 24, 27, 0.85);
+  box-shadow: -10px 0 30px rgba(0,0,0,0.6); 
 }
 
-/* Content Card */
-.content-card {
-  background: white;
+.control-group { display: flex; flex-direction: column; gap: 6px; width: 100%; align-items: center; }
+.reveal-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  background: transparent; color: var(--text-muted);
+  border: none; padding: 8px 4px; border-radius: 14px;
+  font-weight: 500; font-family: inherit; font-size: 10px;
+  cursor: pointer; transition: all 0.2s ease; width: 100%;
+  text-align: center;
+}
+.reveal-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+
+.reveal-btn.step-btn { 
+  background: white; 
+  color: black; 
+  font-weight: 700; 
+  padding: 10px 2px; 
+  border-radius: 16px;
+  font-size: 10px;
+  line-height: 1.2;
+  width: 52px; 
+  min-width: 52px;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reveal-btn.step-btn span {
+  display: block; width: 100%; overflow: hidden; text-overflow: ellipsis;
+}
+
+.reveal-btn.step-btn:hover { background: #e4e4e7; }
+.reveal-btn.icon-only { padding: 8px; border-radius: 50%; width: 36px; height: 36px; }
+.divider-x { width: 16px; height: 1px; background: rgba(255,255,255,0.1); margin: 2px 0; }
+.music-btn.playing { color: var(--accent); background: rgba(16, 185, 129, 0.1); }
+
+kbd {
+  background: rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.15);
+  padding: 1px 3px; border-radius: 3px; font-size: 9px; font-family: monospace; font-weight: 600;
+}
+.reveal-btn.step-btn kbd { background: rgba(0,0,0,0.08); border-color: rgba(0,0,0,0.15); margin-top: 2px;}
+
+/* --- STAGE 1: Fullscreen Presentation --- */
+.stage-fullscreen {
+  height: 100vh; display: flex; flex-direction: column;
+  padding: 5vh 2vw; position: relative;
+  overflow: hidden;
+}
+.event-header { text-align: center; margin-bottom: 2vh; }
+.event-badge {
+  display: inline-block; color: var(--text-muted);
+  font-weight: 700; letter-spacing: 2px; font-size: 11px; margin-bottom: 12px;
+  text-transform: uppercase;
+}
+.event-title { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 8px; }
+.event-location { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-muted); font-weight: 500; font-size: 14px; }
+
+/* Wrapper Podium dengan Margin Kanan-Kiri Ekstra (Safety Padding) */
+.podium-showcase-wrapper {
+  padding: 0 80px; /* Memberikan ruang ekstra dari tombol kontrol kanan */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: auto;
+}
+
+/* Podium Showcase */
+.podium-showcase {
+  display: flex; justify-content: center; align-items: flex-end;
+  gap: 2vw; height: 55vh; padding-bottom: 2vh;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.pedestal {
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  width: 30vw; max-width: 360px; text-align: center; position: relative; height: 100%;
+}
+
+/* Animasi Buka Piala */
+@keyframes plushReveal {
+  0%   { opacity: 0; transform: translate3d(0, 40px, 0) scale(0.85); }
+  60%  { transform: translate3d(0, -6px, 0) scale(1.02); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes softPulse {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(0, -4px, 0) scale(1.01); }
+}
+
+/*
+  PENTING: backdrop-filter (blur) sekarang HANYA ada di .pedestal-info (statis).
+  Elemen ini TIDAK dianimasikan sama sekali, jadi browser tidak pernah perlu
+  menghitung ulang layer blur-nya. Semua transform/opacity animasi dipindah
+  ke .pedestal-info-inner, yang tidak punya backdrop-filter sama sekali.
+  Ini menghilangkan flicker yang terjadi saat animation loop restart.
+*/
+.pedestal-info {
+  background: rgba(24, 24, 27, 0.95);
+  border: 1px solid var(--border-subtle);
+  padding: 20px 16px;
   border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-  min-height: 80vh;
-}
-.content-card.fullscreen {
-  min-height: 80vh;
-}
-.content-card h2 {
-  text-align: center;
-  color: #667eea;
-  margin-bottom: 40px;
-  font-size: 2em;
+  width: 100%;
+  margin-bottom: 20px;
   position: relative;
-  padding-bottom: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-}
-.toggle-menu-btn {
-  position: absolute;
-  left: 0;
-  top: 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.8em;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  z-index: 100;
-}
-.toggle-menu-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
-.content-card h2::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 4px;
-  background: linear-gradient(90deg, #667eea, #764ba2);
-  border-radius: 2px;
+  z-index: 20;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.5s ease;
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px); /* Safari */
 }
 
-/* Podium */
-.podium-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 30px;
-  margin: 10px auto;
-  max-width: 1100px;
-}
-.podium-place {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  width: 240px;
-  padding: 30px 25px;
-  border-radius: 15px 15px 0 0;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  color: white;
-  text-align: center;
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  position: relative;
-  overflow: hidden;
-}
-.podium-place::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+.pedestal.concealed .pedestal-info {
+  opacity: 0;
   pointer-events: none;
 }
 
-.podium-place:hover {
-  transform: translateY(-10px) scale(1.05);
+.pedestal-info-inner {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
-.podium-1 {
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-  height: 380px;
-  z-index: 3;
-  position: relative;
+.pedestal:not(.concealed) .pedestal-info-inner {
+  animation:
+    plushReveal 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    softPulse 4s ease-in-out 0.9s infinite; /* delay disamakan persis dgn durasi reveal, no gap */
 }
 
-.podium-1::after {
-  content: '👑';
-  position: absolute;
-  right:41.5%;
-  transform: rotate(40deg);
+.pedestal-rank-icon {
+  position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-dark); border: 1px solid var(--border-subtle);
 }
 
-.podium-2 {
-  background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%);
-  height: 320px;
-}
-
-.podium-3 {
-  background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
-  height: 320px;
-}
-
-.place-number {
-  font-size: 4em;
-  font-weight: bold;
-  margin-bottom: 15px;
-  text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
-  line-height: 1;
-}
-.winner-name {
-  font-size: 1.5em;
-  font-weight: bold;
-  margin: 8px 0;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-}
-.winner-detail {
-  font-size: 1.1em;
-  opacity: 0.95;
-  margin: 5px 0;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-}
+.winner-name { font-size: 22px; font-weight: 800; margin-top: 8px; margin-bottom: 6px; letter-spacing: -0.5px; }
+.winner-farm { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 16px; }
 .winner-score {
-  font-size: 1.2em;
-  font-weight: bold;
-  margin-top: 15px;
-  padding: 8px 16px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 25px;
-  backdrop-filter: blur(10px);
+  display: inline-block; font-size: 16px; font-weight: 700;
+  padding: 6px 14px; border-radius: 8px; background: rgba(0,0,0,0.5); 
+  border: 1px solid var(--border-subtle);
 }
 
-/* Table */
-#dataTableContainer {
-  width: 100%;
-  overflow-x: auto;
-  margin: 20px 0;
+.pedestal-base {
+  width: 100%; border-radius: 16px 16px 0 0; position: relative; overflow: hidden;
+  display: flex; justify-content: center; padding-top: 20px;
+  background: rgba(255,255,255,0.01); border: 1px solid var(--border-subtle); border-bottom: none;
+  z-index: 10;
+  transition: height 0.9s cubic-bezier(0.34, 1.56, 0.64, 1); 
 }
 
-.rank-table {
-  width: 100% !important;
-  margin: 0 auto;
-  border-collapse: collapse;
-  border-radius: 12px;
-  overflow: hidden;
-  background-color: white;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  font-size: 0.95em;
+.pedestal.concealed .pedestal-base {
+  height: 0px !important; 
+  padding-top: 0px;
+  border: none;
 }
 
-.rank-table thead th {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-align: center;
-  padding: 12px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  border-bottom: 2px solid #5a67d8;
+.pedestal-base::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.pedestal-number { font-size: 60px; font-weight: 800; color: rgba(255,255,255,0.03); line-height: 1; font-family: monospace; }
+
+/* Keadaan Tertutup (Concealed / Rahasia) */
+.mystery-box {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center;
+  opacity: 0; pointer-events: none; transition: all 0.4s ease; z-index: 30;
 }
+.pedestal.concealed .mystery-box { opacity: 1; }
 
-.rank-table tbody td {
-  padding: 10px 15px;
-  text-align: center;
-  border-bottom: 1px solid #eee;
-}
+/* Ketinggian & Warna Metalik Spesifik Juara (Emas, Perak, Perunggu Elegan) */
+.rank-1 .pedestal-base { height: 24vh; }
+.rank-1 .pedestal-base::before { background: var(--gold); box-shadow: 0 0 25px var(--gold-glow); }
+.rank-1 .pedestal-rank-icon { border-color: var(--gold-border); color: var(--gold); background: rgba(253, 224, 71, 0.05); }
+.rank-1 .winner-name { color: var(--gold); }
+.rank-1 .pedestal-info { background: rgba(24, 24, 27, 0.95); border-color: var(--gold-border); box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 20px var(--gold-glow); }
 
-.rank-table tbody tr:hover {
-  background-color: #f3f4ff;
-  transform: scale(1.005);
-  transition: all 0.2s ease;
-}
+.rank-2 .pedestal-base { height: 16vh; }
+.rank-2 .pedestal-base::before { background: var(--silver); box-shadow: 0 0 20px var(--silver-glow); }
+.rank-2 .pedestal-rank-icon { border-color: var(--silver-border); color: var(--silver); background: rgba(226, 232, 240, 0.05); }
+.rank-2 .winner-name { color: var(--silver); }
+.rank-2 .pedestal-info { border-color: var(--silver-border); }
 
-.rank-table td:first-child {
-  font-weight: bold;
-  color: #667eea;
-}
+.rank-3 .pedestal-base { height: 10vh; }
+.rank-3 .pedestal-base::before { background: var(--bronze); box-shadow: 0 0 20px var(--bronze-glow); }
+.rank-3 .pedestal-rank-icon { border-color: var(--bronze-border); color: var(--bronze); background: rgba(251, 146, 60, 0.05); }
+.rank-3 .winner-name { color: var(--bronze); }
+.rank-3 .pedestal-info { border-color: var(--bronze-border); }
 
-.dataTables_wrapper .dataTables_length,
-.dataTables_wrapper .dataTables_filter,
-.dataTables_wrapper .dataTables_info,
-.dataTables_wrapper .dataTables_paginate {
-  margin: 10px 20px;
-  font-size: 0.9em;
-}
+/* --- STAGE 2: Tabel --- */
+.table-section { padding: 8vh 5vw; min-height: 100vh; background: var(--bg-dark); position: relative;}
+.table-container { max-width: 1000px; margin: 0 auto; transition: all 1s var(--ease-spring); opacity: 1; filter: blur(0px); padding-bottom: 100px; }
+.table-container.concealed-table { opacity: 0; filter: blur(20px); pointer-events: none; transform: translateY(40px); }
 
-.dataTables_filter input {
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 4px 8px;
-  outline: none;
-}
+.table-header { display: flex; align-items: center; gap: 16px; margin-bottom: 40px; }
+.header-icon { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; border: 1px solid var(--border-subtle); display: flex; }
+.table-header h2 { font-size: 22px; font-weight: 700; }
 
-
-.no-data {
-  text-align: center;
-  color: #999;
-  font-style: italic;
-  padding: 60px 20px;
-  font-size: 1.2em;
-}
-
-/* Animations */
-@keyframes pulse {
-  0%, 100% {
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  }
-  50% {
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-.updating {
-  position: relative;
-  overflow: hidden;
-}
-
-.updating::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  background-size: 1000px 100%;
-  animation: shimmer 1s;
-  pointer-events: none;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .header h1 {
-    font-size: 1.8em;
-  }
-  .toggle-menu-btn {
-    position:relative;
-    display: inline-block;
-    top:0px;
-    margin-bottom: 8px;
-  }
-
-  .class-grid {
-    grid-template-columns: 1fr;
-  }
-  .podium-container {
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-  }
-  .podium-place {
-    width: 100%;
-    max-width: 300px;
-    height: auto !important;
-    padding: 25px;
-  }
-  .podium-1, .podium-2, .podium-3 {
-    height: auto !important;
-  }
-  .podium-2 {
-    order:2;
-  }
-  .podium-3 {
-    order:3;
-  }
-  .content-card {
-    padding: 25px 15px;
-  }
-  .rank-table {
-    font-size: 0.85em;
-  }
-  .rank-table th,
-  .rank-table td {
-    padding: 8px 6px;
-    font-size: 0.85em;
-    white-space: nowrap;
-  }
-  
-  #dataTableContainer {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .dataTables_wrapper .dataTables_length,
-  .dataTables_wrapper .dataTables_filter {
-    float: none !important;
-    text-align: center;
-    margin-bottom: 10px;
-  }
-  
-  .dataTables_wrapper .dataTables_info,
-  .dataTables_wrapper .dataTables_paginate {
-    float: none !important;
-    text-align: center;
-    margin-top: 10px;
-  }
-}
+.rank-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.rank-table th { color: var(--text-muted); font-size: 12px; text-transform: uppercase; padding: 20px 16px; text-align: left; border-bottom: 1px solid var(--border-subtle); font-weight: 600; }
+.rank-table td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.03); font-weight: 500; }
+.rank-table tr:hover td { background: rgba(255,255,255,0.02); }

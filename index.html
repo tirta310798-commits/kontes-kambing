@@ -3,22 +3,87 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🏆 Ranking Kontes Domba</title>
+  <title>Live Stage Presentation - Kontes Domba 2026</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🏆 KONTES DOMBA BUPATI LUMAJANG CUP 2025</h1>
-      <p>26 OKTOBER 2025</p>
+  
+  <!-- Tombol Menu Operator (Kiri Bawah) -->
+  <button class="operator-btn" onclick="toggleMenu()" title="Pengaturan Kelas">
+    <i data-lucide="sliders-horizontal"></i>
+  </button>
+
+  <div class="operator-menu" id="operatorMenu">
+    <div class="menu-header">
+      <h3 style="font-weight: 700; font-size: 16px;">Navigasi Kelas</h3>
+      <button onclick="toggleMenu()" class="close-btn"><i data-lucide="x"></i></button>
     </div>
-    <div class="class-selector">
-      <h3>📋 Pilih Kelas Kontes</h3>
-      <div class="class-grid" id="classGrid"></div>
+    <div class="class-list" id="classList"></div>
+  </div>
+
+  <!-- STAGE 1: FULLSCREEN PODIUM -->
+  <section class="stage-fullscreen" id="stageTop">
+    <header class="event-header">
+      <div class="event-badge">BUPATI LUMAJANG CUP 2026</div>
+      <h1 class="event-title" id="displayClassName">Pilih Kelas Terlebih Dahulu</h1>
+      <div class="event-location">
+        <i data-lucide="map-pin" style="width:16px;height:16px;"></i> 
+        Wisata Kolam Renang Water Park KWT Lumajang &nbsp;|&nbsp; 26 Oktober 2026
+      </div>
+    </header>
+
+    <!-- Kontainer Podium dengan Safety Margin kanan/kiri agar tidak tertutup kontrol -->
+    <div class="podium-showcase-wrapper">
+      <div class="podium-showcase" id="podiumShowcase">
+        <div style="color: var(--text-muted); font-size: 16px; font-weight: 500;">
+          Silakan klik tombol menu di kiri bawah untuk memilih kelas lomba.
+        </div>
+      </div>
     </div>
 
-    <div class="content-card" id="content"></div>
-  </div>
+    <!-- SEQUENCER CONTROLS (Diberi jarak aman di sebelah kanan) -->
+    <div class="reveal-controls" id="revealControls">
+      <button class="reveal-btn icon-only music-btn" id="musicToggleBtn" onclick="toggleMusic()" title="Mainkan Musik (M)">
+        <i data-lucide="volume-x" id="musicIcon"></i>
+      </button>
+      
+      <div class="divider-x"></div>
+      
+      <div class="control-group">
+        <button class="reveal-btn step-btn" id="stepActionBtn" onclick="nextStep()" title="Lanjut (Spasi)">
+          <span id="stepActionText">Pilih</span>
+          <kbd>Space</kbd>
+        </button>
+        <button class="reveal-btn all-btn icon-only" onclick="revealAll()" title="Buka Semua Instan (A)">
+          <i data-lucide="zap"></i>
+        </button>
+      </div>
+      
+      <div class="divider-x"></div>
+      
+      <button class="reveal-btn icon-only reset-btn" onclick="resetReveal()" title="Reset Ulang (R)">
+        <i data-lucide="rotate-ccw"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- STAGE 2: FULL RANKING TABLE -->
+  <section class="table-section">
+    <div class="table-container">
+      <div class="table-header">
+        <div class="header-icon"><i data-lucide="list-ordered"></i></div>
+        <h2>Peringkat Keseluruhan</h2>
+      </div>
+      <div id="dataTableContainer">
+        <!-- Tabel dirender via JS -->
+      </div>
+    </div>
+  </section>
+
   <script src="script.js"></script>
 </body>
 </html>
