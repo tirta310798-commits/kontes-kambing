@@ -9,8 +9,7 @@ const classNames = {
 
 let allData = [];
 let currentClassId = null; 
-let currentRevealStep = 0; 
-let lastDataSignature = null; // NEW: dipakai untuk mendeteksi apakah data kelas yang tampil benar-benar berubah
+let lastDataSignature = null; // dipakai untuk mendeteksi apakah data kelas yang tampil benar-benar berubah
 
 // === LOGIKA AUDIO LOKAL (musik.mp3) === //
 const bgMusic = new Audio('musik.mp3'); 
@@ -18,6 +17,8 @@ bgMusic.loop = true;
 bgMusic.volume = 0.4;
 
 let isMusicPlaying = false;
+// Tombol musik visual sudah dihapus (controller dibuang), tapi fungsi ini
+// dibuat aman (optional chaining) kalau elemen tsb tidak ada di DOM.
 const musicToggleBtn = document.getElementById('musicToggleBtn');
 const musicIcon = document.getElementById('musicIcon');
 
@@ -25,13 +26,13 @@ function toggleMusic() {
   if (isMusicPlaying) {
     bgMusic.pause();
     isMusicPlaying = false;
-    musicToggleBtn.classList.remove('playing');
-    musicIcon.setAttribute('data-lucide', 'volume-x');
+    musicToggleBtn?.classList.remove('playing');
+    musicIcon?.setAttribute('data-lucide', 'volume-x');
   } else {
     bgMusic.play().then(() => {
       isMusicPlaying = true;
-      musicToggleBtn.classList.add('playing');
-      musicIcon.setAttribute('data-lucide', 'volume-2');
+      musicToggleBtn?.classList.add('playing');
+      musicIcon?.setAttribute('data-lucide', 'volume-2');
     }).catch(error => {
       console.warn("Gagal memutar musik. Pastikan file 'musik.mp3' ada di folder ini.", error);
     });
@@ -41,7 +42,6 @@ function toggleMusic() {
 
 document.addEventListener('DOMContentLoaded', () => { 
   lucide.createIcons(); 
-  updateStepButtonText();
   fetchData();
   // Auto-refresh data dari Google Sheet setiap 5 detik agar langsung update tanpa manual refresh
   setInterval(fetchData, 5000);
@@ -57,11 +57,8 @@ async function fetchData() {
     
     if (document.getElementById("classList").innerHTML === "") renderClassSidebar();
     
-    // Jika kelas sudah dipilih, perbarui tampilan HANYA jika datanya benar-benar berubah.
-    // Sebelumnya showClass() dipanggil setiap 5 detik tanpa syarat, yang menghancurkan
-    // dan membangun ulang .pedestal-info via innerHTML setiap kali -> animasi CSS
-    // restart dari awal -> terlihat seperti "kedip". Dengan signature check ini,
-    // DOM (dan animasinya) hanya di-render ulang saat datanya memang berubah.
+    // Jika kelas sudah dipilih, perbarui tampilan HANYA jika datanya benar-benar berubah
+    // (mencegah DOM di-render ulang & animasi restart tiap polling padahal datanya sama).
     if (currentClassId !== null) {
       const newSignature = JSON.stringify(
         allData.filter(item => parseInt(item["Kelas"]) === currentClassId)
@@ -89,8 +86,11 @@ function renderClassSidebar() {
       btn.classList.add("active");
       
       lastDataSignature = null; // reset supaya showClass() pasti dijalankan untuk kelas baru
-      resetReveal(); 
       showClass(i);
+      
+      // Musik otomatis mulai begitu kelas dipilih (dipicu dari klik = user gesture,
+      // jadi tidak diblokir kebijakan autoplay browser)
+      if (!isMusicPlaying) toggleMusic();
       
       toggleMenu();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -129,36 +129,6 @@ function calculateScore(item, isJuriClass) {
   }
 }
 
-function updateStepButtonText() {
-  const textEl = document.getElementById("stepActionText");
-  if (!textEl) return;
-
-  if (currentClassId === null) {
-    textEl.innerHTML = "Pilih";
-    return;
-  }
-
-  switch (currentRevealStep) {
-    case 0:
-      textEl.innerHTML = "Juara 3";
-      break;
-    case 1:
-      textEl.innerHTML = "Juara 2";
-      break;
-    case 2:
-      textEl.innerHTML = "Juara 1";
-      break;
-    case 3:
-      textEl.innerHTML = "Tabel";
-      break;
-    case 4:
-      textEl.innerHTML = "Atas ⬆"; 
-      break;
-    default:
-      textEl.innerHTML = "Lanjut";
-  }
-}
-
 function showClass(classId) {
   document.getElementById("displayClassName").textContent = `KELAS ${classId}: ${classNames[classId]}`;
 
@@ -178,6 +148,8 @@ function showClass(classId) {
   const order = [1, 0, 2]; 
   let htmlPodium = '';
   
+  // Podium sekarang langsung ditampilkan penuh (juara 3, 2, 1 sekaligus),
+  // tidak ada lagi state "concealed" yang menunggu klik controller.
   order.forEach(idx => {
     if (podium[idx]) {
       const p = podium[idx];
@@ -188,23 +160,9 @@ function showClass(classId) {
       
       const scoreLabel = isJuriClass ? "Poin" : "kg";
       let icon = rank === 1 ? 'crown' : 'medal';
-      
-      let isConcealed = true;
-      if (currentRevealStep >= 1 && rank === 3) isConcealed = false;
-      if (currentRevealStep >= 2 && rank === 2) isConcealed = false;
-      if (currentRevealStep >= 3 && rank === 1) isConcealed = false;
-      if (currentRevealStep === 4) isConcealed = false; 
 
-      // NOTE: .pedestal-info-inner ditambahkan sebagai wrapper baru.
-      // .pedestal-info sekarang statis (cuma pegang blur/border/shadow),
-      // sedangkan .pedestal-info-inner yang menerima animasi CSS.
       htmlPodium += `
-        <div class="pedestal rank-${rank} ${isConcealed ? 'concealed' : ''}" id="podium-rank-${rank}">
-          
-          <div class="mystery-box">
-            <i data-lucide="lock" style="width:32px; height:32px; color:rgba(255,255,255,0.2);"></i>
-          </div>
-
+        <div class="pedestal rank-${rank}" id="podium-rank-${rank}">
           <div class="pedestal-info">
             <div class="pedestal-rank-icon">
               <i data-lucide="${icon}" style="width:20px; height:20px;"></i>
@@ -224,13 +182,6 @@ function showClass(classId) {
   });
   
   podiumDiv.innerHTML = htmlPodium;
-
-  const tableContainer = document.querySelector('.table-container');
-  if (currentRevealStep >= 4) {
-    tableContainer.classList.remove('concealed-table');
-  } else {
-    tableContainer.classList.add('concealed-table');
-  }
 
   let tableHtml = `
     <table class="rank-table">
@@ -259,7 +210,7 @@ function showClass(classId) {
       <tr>
         <td style="color:var(--text-muted); font-family:monospace;">${rank}</td>
         <td>${noReg}</td>
-        <td style="color:white; font-weight:600;">${nama}</td>
+        <td style="color:var(--text-main); font-weight:600;">${nama}</td>
         <td>${farm}</td>
     `;
     if (isJuriClass) {
@@ -267,9 +218,9 @@ function showClass(classId) {
       const j2 = item["Juri 2"] || item["JURI II"] || item["Juri2"] || '-';
       const j3 = item["Juri 3"] || item["JURI III"] || item["Juri3"] || '-';
       const totalScore = calculateScore(item, true);
-      tableHtml += `<td>${j1}</td><td>${j2}</td><td>${j3}</td><td style="color:white; font-weight:700;">${totalScore.toFixed(2)}</td>`;
+      tableHtml += `<td>${j1}</td><td>${j2}</td><td>${j3}</td><td style="color:var(--text-main); font-weight:700;">${totalScore.toFixed(2)}</td>`;
     } else {
-      tableHtml += `<td style="color:white; font-weight:700;">${calculateScore(item, false).toFixed(1)} kg</td>`;
+      tableHtml += `<td style="color:var(--text-main); font-weight:700;">${calculateScore(item, false).toFixed(1)} kg</td>`;
     }
     tableHtml += `</tr>`;
   });
@@ -280,72 +231,7 @@ function showClass(classId) {
   lucide.createIcons();
 }
 
-function nextStep() {
-  if (currentClassId === null) {
-    alert("Silakan pilih kelas terlebih dahulu melalui menu di kiri bawah.");
-    toggleMenu();
-    return;
-  }
-
-  if (currentRevealStep === 0) {
-    currentRevealStep = 1;
-    document.getElementById(`podium-rank-3`)?.classList.remove('concealed');
-    if (!isMusicPlaying) toggleMusic();
-  } 
-  else if (currentRevealStep === 1) {
-    currentRevealStep = 2;
-    document.getElementById(`podium-rank-2`)?.classList.remove('concealed');
-  } 
-  else if (currentRevealStep === 2) {
-    currentRevealStep = 3;
-    document.getElementById(`podium-rank-1`)?.classList.remove('concealed');
-  } 
-  else if (currentRevealStep === 3) {
-    currentRevealStep = 4;
-    document.querySelector('.table-container').classList.remove('concealed-table');
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-  } 
-  else if (currentRevealStep === 4) {
-    currentRevealStep = 4; 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  updateStepButtonText();
-}
-
-function revealAll() {
-  if (currentClassId === null) {
-    alert("Silakan pilih kelas terlebih dahulu melalui menu di kiri bawah.");
-    toggleMenu();
-    return;
-  }
-  currentRevealStep = 3; // hanya sampai podium terbuka semua, belum ke tabel
-  [1, 2, 3].forEach(rank => {
-    document.getElementById(`podium-rank-${rank}`)?.classList.remove('concealed');
-  });
-  window.scrollTo({ top: 0, behavior: 'smooth' }); // pastikan tetap di area podium
-  updateStepButtonText();
-}
-
-function resetReveal() {
-  if (currentClassId === null) return;
-  currentRevealStep = 0;
-  [1, 2, 3].forEach(rank => {
-    document.getElementById(`podium-rank-${rank}`)?.classList.add('concealed');
-  });
-  document.querySelector('.table-container').classList.add('concealed-table');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  updateStepButtonText();
-}
-
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName.toLowerCase() === 'input') return;
-
-  if (e.code === 'Space' || e.code === 'Enter') {
-    e.preventDefault(); 
-    nextStep();
-  }
-  if (e.key.toLowerCase() === 'a') revealAll();
-  if (e.key.toLowerCase() === 'r') resetReveal();
   if (e.key.toLowerCase() === 'm') toggleMusic();
 });
