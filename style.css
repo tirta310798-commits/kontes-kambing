@@ -24,6 +24,9 @@
 
   --accent: #047857;
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Tinggi header (dipakai untuk reserve ruang karena header sekarang fixed) */
+  --header-h: 128px;
 }
 
 body {
@@ -53,7 +56,7 @@ body {
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(24px);
   border-right: 1px solid var(--border-subtle);
-  z-index: 200; padding: 32px 24px;
+  z-index: 300; padding: 32px 24px;
   transition: left 0.5s var(--ease-spring);
   box-shadow: 20px 0 60px rgba(15, 23, 42, 0.15);
 }
@@ -73,13 +76,16 @@ body {
 .class-btn:hover { background: rgba(15, 23, 42, 0.04); color: var(--text-main); }
 .class-btn.active { background: rgba(15, 23, 42, 0.06); color: var(--text-main); border-color: var(--border-subtle); font-weight: 600; }
 
-/* --- STAGE 1: Fullscreen Presentation --- */
-.stage-fullscreen {
-  height: 100vh; display: flex; flex-direction: column;
-  padding: 5vh 2vw; position: relative;
-  overflow: hidden;
+/* --- HEADER (fixed, selalu terlihat walau di-scroll ke tabel) --- */
+.event-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 150;
+  background: var(--bg-page);
+  text-align: center;
+  padding: 18px 4vw 14px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
-.event-header { text-align: center; margin-bottom: 2vh; }
 .event-badge {
   display: inline-block; color: var(--text-muted);
   font-weight: 700; letter-spacing: 2px; font-size: 11px; margin-bottom: 12px;
@@ -87,6 +93,15 @@ body {
 }
 .event-title { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 8px; color: var(--text-main); }
 .event-location { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-muted); font-weight: 500; font-size: 14px; }
+
+/* --- STAGE 1: Fullscreen Presentation --- */
+.stage-fullscreen {
+  height: 100vh; display: flex; flex-direction: column;
+  /* padding-top diberi ruang ekstra sebesar tinggi header (fixed) agar konten
+     tidak tertutup header */
+  padding: calc(3vh + var(--header-h)) 2vw 2vh; position: relative;
+  overflow: hidden;
+}
 
 /* Wrapper Podium */
 .podium-showcase-wrapper {
@@ -109,8 +124,7 @@ body {
   width: 30vw; max-width: 360px; text-align: center; position: relative; height: 100%;
 }
 
-/* Animasi Buka Piala — sekarang jalan sekali saat podium pertama kali
-   dirender untuk kelas yang dipilih (tidak lagi menunggu klik controller). */
+/* Animasi Buka Piala */
 @keyframes plushReveal {
   0%   { opacity: 0; transform: translate3d(0, 40px, 0) scale(0.85); }
   60%  { transform: translate3d(0, -6px, 0) scale(1.02); }
@@ -144,8 +158,6 @@ body {
     softPulse 4s ease-in-out 0.9s infinite;
 }
 
-/* Icon badge = sibling .pedestal-info-inner, supaya posisi absolute-nya
-   tetap terhitung relatif ke .pedestal-info yang statis/tidak dianimasikan. */
 .pedestal-rank-icon {
   position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
   width: 40px; height: 40px; border-radius: 50%;
@@ -173,7 +185,7 @@ body {
 .pedestal-base::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px; }
 .pedestal-number { font-size: 60px; font-weight: 800; color: rgba(15, 23, 42, 0.05); line-height: 1; font-family: monospace; }
 
-/* Ketinggian & Warna Rank — solid, tanpa glow (biar kebaca di siang hari) */
+/* Ketinggian & Warna Rank */
 .rank-1 .pedestal-base { height: 24vh; }
 .rank-1 .pedestal-base::before { background: var(--gold-border); }
 .rank-1 .pedestal-rank-icon { border-color: var(--gold-border); color: var(--gold); background: var(--gold-bg); }
@@ -196,7 +208,11 @@ body {
 .rank-3 .winner-score { background: var(--bronze-bg); color: var(--bronze); border-color: var(--bronze-border); }
 
 /* --- STAGE 2: Tabel --- */
-.table-section { padding: 8vh 5vw; min-height: 100vh; background: var(--bg-page); position: relative;}
+.table-section {
+  /* padding-top juga menyisakan ruang utk header fixed */
+  padding: calc(4vh + var(--header-h)) 5vw 8vh;
+  min-height: 100vh; background: var(--bg-page); position: relative;
+}
 .table-container { max-width: 1000px; margin: 0 auto; padding-bottom: 100px; }
 
 .table-header { display: flex; align-items: center; gap: 16px; margin-bottom: 40px; }
@@ -209,22 +225,31 @@ body {
 .rank-table tr:hover td { background: rgba(15, 23, 42, 0.02); }
 
 /* =========================================================
-   KIOSK PORTRAIT MODE
+   KIOSK PORTRAIT MODE (mis. layar stretched bar 49" dirotasi,
+   rasio sangat tinggi/ekstrem — bukan cuma 9:16)
+
+   PENTING: .stage-fullscreen TIDAK lagi dipaksa 100vh di portrait.
+   Sebelumnya height:100vh membuat section header+podium memenuhi
+   SELURUH tinggi layar yang sangat panjang, sehingga jarak ke tabel
+   di bawahnya jadi sangat jauh/kosong. Sekarang tingginya menyesuaikan
+   konten (auto), jadi tabel menyusul lebih dekat & tidak ada jarak
+   kosong berlebihan.
    ========================================================= */
 @media (orientation: portrait) {
-  .stage-fullscreen {
-    padding: 4vh 4vw 2vh;
-  }
+  :root { --header-h: 104px; }
 
-  .event-header { margin-bottom: 1.5vh; }
-  .event-title { font-size: clamp(26px, 6.5vw, 38px); }
-  .event-location { font-size: 13px; }
+  .event-header { padding: 14px 4vw 10px; }
+  .event-title { font-size: clamp(24px, 6vw, 34px); }
+  .event-location { font-size: 12px; }
+
+  .stage-fullscreen {
+    height: auto;
+    padding: calc(2vh + var(--header-h)) 4vw 3vh;
+  }
 
   .podium-showcase-wrapper {
     margin-top: 0;
-    flex: 1;
     padding: 0 10px;
-    align-items: center;
   }
 
   .podium-showcase {
@@ -245,4 +270,6 @@ body {
   .winner-score { font-size: 14px; padding: 5px 12px; }
 
   .pedestal-number { font-size: 44px; }
+
+  .table-section { padding: calc(2vh + var(--header-h)) 4vw 6vh; min-height: auto; }
 }
