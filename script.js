@@ -100,16 +100,29 @@ function renderClassSidebar() {
 }
 
 function parseVal(val) {
-  if (!val) return 0;
+  if (val === null || val === undefined || val === '') return 0;
   const parsed = parseFloat(String(val).replace(',', '.'));
   return isNaN(parsed) ? 0 : parsed;
+}
+
+function getFirstDefinedValue(item, keys) {
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(item, key)) {
+      const value = item[key];
+      if (value !== null && value !== undefined && String(value).trim() !== '') {
+        return value;
+      }
+    }
+  }
+  return undefined;
 }
 
 // PERBAIKAN UTAMA: Deteksi otomatis kolom Juri (baik "Juri 1", "JURI I", maupun kolom nilai juri lainnya)
 function calculateScore(item, isJuriClass) {
   if (isJuriClass) {
-    if (item["TOTAL"] !== undefined && item["TOTAL"] !== "") return parseVal(item["TOTAL"]);
-    
+    const totalValue = getFirstDefinedValue(item, ["TOTAL", "TotalJuri", "Total Juri", "TOTAL JURI"]);
+    if (totalValue !== undefined) return parseVal(totalValue);
+
     // Cari semua key yang mengandung kata "juri" atau kolom angka penilaian juri
     const judgeKeys = Object.keys(item).filter(k => /juri/i.test(k) || /^juri\s*\d+/i.test(k));
     if (judgeKeys.length > 0) {
@@ -119,13 +132,13 @@ function calculateScore(item, isJuriClass) {
       });
       return sum;
     }
-    
+
     // Fallback manual jika format kuncinya spesifik
-    return parseVal(item["Juri 1"] || item["JURI I"] || item["Juri1"]) + 
-           parseVal(item["Juri 2"] || item["JURI II"] || item["Juri2"]) + 
-           parseVal(item["Juri 3"] || item["JURI III"] || item["Juri3"]);
+    return parseVal(getFirstDefinedValue(item, ["Juri 1", "JURI I", "Juri1", "Juri_1", "Juri-1"])) +
+           parseVal(getFirstDefinedValue(item, ["Juri 2", "JURI II", "Juri2", "Juri_2", "Juri-2"])) +
+           parseVal(getFirstDefinedValue(item, ["Juri 3", "JURI III", "Juri3", "Juri_3", "Juri-3"]));
   } else {
-    return parseVal(item["BERAT"] || item["Berat"]);
+    return parseVal(getFirstDefinedValue(item, ["BERAT", "Berat", "berat"]));
   }
 }
 
@@ -214,11 +227,11 @@ function showClass(classId) {
         <td>${farm}</td>
     `;
     if (isJuriClass) {
-      const j1 = item["Juri 1"] || item["JURI I"] || item["Juri1"] || '-';
-      const j2 = item["Juri 2"] || item["JURI II"] || item["Juri2"] || '-';
-      const j3 = item["Juri 3"] || item["JURI III"] || item["Juri3"] || '-';
+      const j1 = getFirstDefinedValue(item, ["Juri 1", "JURI I", "Juri1", "Juri_1", "Juri-1"]);
+      const j2 = getFirstDefinedValue(item, ["Juri 2", "JURI II", "Juri2", "Juri_2", "Juri-2"]);
+      const j3 = getFirstDefinedValue(item, ["Juri 3", "JURI III", "Juri3", "Juri_3", "Juri-3"]);
       const totalScore = calculateScore(item, true);
-      tableHtml += `<td>${j1}</td><td>${j2}</td><td>${j3}</td><td style="color:var(--text-main); font-weight:700;">${totalScore.toFixed(2)}</td>`;
+      tableHtml += `<td>${j1 !== undefined ? j1 : '-'}</td><td>${j2 !== undefined ? j2 : '-'}</td><td>${j3 !== undefined ? j3 : '-'}</td><td style="color:var(--text-main); font-weight:700;">${totalScore.toFixed(2)}</td>`;
     } else {
       tableHtml += `<td style="color:var(--text-main); font-weight:700;">${calculateScore(item, false).toFixed(1)} kg</td>`;
     }
